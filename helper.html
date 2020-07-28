@@ -1,0 +1,210 @@
+</html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>React Local</title>
+    <!-- Import the React, React-Dom and Babel libraries from unpkg -->
+    <script type="application/javascript" src="https://unpkg.com/react@16.0.0/umd/react.production.min.js"></script>
+    <script type="application/javascript"
+        src="https://unpkg.com/react-dom@16.0.0/umd/react-dom.production.min.js"></script>
+    <script type="application/javascript" src="https://unpkg.com/babel-standalone@6.26.0/babel.js"></script>
+    <script type="text/javascript" src="heros.js" charset="UTF-8"></script>
+
+</head>
+
+<style>
+    .tag {
+        flex: 0 0 100px
+    }
+
+    .tag-highlight {
+        background-color: aqua;
+    }
+
+    .hero {
+        margin: 2px;
+    }
+
+    .tags-container {
+        display: flex;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+
+    }
+
+    .level-1 {
+        background-color: cadetblue;
+    }
+
+    .level-2 {
+        background-color: cadetblue;
+
+    }
+
+    .level-3 {
+        background-color: greenyellow;
+
+    }
+
+    .level-4 {
+        background-color: lightpink;
+
+    }
+
+    .level-5 {
+        background-color: yellow;
+
+    }
+
+    .level-6 {
+        background-color: orangered;
+
+    }
+</style>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        heros = heros.filter(x => !x.hidden);
+        console.log(heros);
+
+
+        const tags = Array.from(new Set(heros.filter(x => x.tags).map(x => x.tags).flat()));
+        const types = Array.from(new Set(heros.filter(x => x.type).map(x => x.type)));
+        const options = tags.concat(types);
+
+        console.log(options);
+
+
+
+        // Obtain the root 
+        const rootElement = document.getElementById('root')
+        // Create a ES6 class component    
+        class MainComponent extends React.Component {
+            constructor(props) {
+                super(props);
+                this.state = { selectedTags: [] };
+            }
+
+            _getCombination(itemSet, itemNum) {
+                if (itemNum === 0 || itemSet.length === 0) {
+                    return [[]]
+                } else {
+                    const firstItemX = itemSet[0]
+                    const withoutXSet = itemSet.filter(xx => xx !== firstItemX);
+                    const chooseXCom = this._getCombination(withoutXSet, itemNum - 1).map(xx => xx.concat([firstItemX]));
+                    const notChooseXCom = this._getCombination(withoutXSet, itemNum);
+                    return chooseXCom.concat(notChooseXCom)
+                }
+
+            }
+            getHerosByComp(comp) {
+                return this.props.heros.filter(h => comp.every(tag => h.tags.includes(tag) || h.type === tag)).sort((a, b) => b.level - a.level);
+            }
+
+
+            toggleSelectTag(tag) {
+                if (this.state.selectedTags.includes(tag)) {
+                    this.setState({ selectedTags: this.state.selectedTags.filter(x => x !== tag) });
+                } else {
+                    this.setState({ selectedTags: this.state.selectedTags.concat([tag]) });
+                }
+
+            }
+
+
+            // renderTags() {
+            //     return (
+
+            //     )
+            // }
+
+            render() {
+                const combinations = this._getCombination(this.state.selectedTags, 3);
+                return (
+                    <div>
+                        <div class="tags-container">{
+                            this.props.tags.map(x => {
+                                const highlight = this.state.selectedTags.includes(x);
+                                return <TagComponent tag={x} highlight={highlight} onClick={() => this.toggleSelectTag(x)}></TagComponent>
+                            })
+                        }</div>
+                        <div>
+                            {combinations.map(comp =>
+                                <span>
+                                    <div style={{ 'width': '50%' }}>
+                                        <div class="tags-container">{
+                                            comp.map(x => <TagComponent tag={x}></TagComponent>)
+                                        }</div>
+                                    </div>
+                                    <div style={{ 'width': '50%' }}>
+                                        <div class="tags-container">{
+                                            this.getHerosByComp(comp).map(hero => <HeroComponent hero={hero}></HeroComponent>)
+                                        }</div>
+                                    </div>
+                                </span>
+
+
+                            )}
+
+
+
+                        </div>
+                    </div>
+
+
+                );
+            }
+        }
+
+
+        class TagComponent extends React.Component {
+
+            render() {
+                let className = "tag";
+                if (this.props.highlight) {
+                    className += " tag-highlight"
+                }
+                return (
+                    <span class={className} onClick={this.props.onClick}>{this.props.tag}</span>
+                );
+            }
+        }
+
+
+        class HeroComponent extends React.Component {
+
+            render() {
+                let className = "hero";
+                const level = this.props.hero.level;
+                className += " level-" + level
+                return (
+                    <span class={className} >{this.props.hero.name}</span>
+                );
+            }
+        }
+        // Create a function to wrap up your component
+        function App() {
+            return (
+                <div>
+                    <MainComponent tags={options} heros={heros} />
+                </div>
+            )
+        }
+
+
+        // Use the ReactDOM.render to show your component on the browser
+        ReactDOM.render(
+            <App />,
+            rootElement
+        )
+    </script>
+
+</body>
+
+</html>
